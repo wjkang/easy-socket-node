@@ -17,11 +17,12 @@ export default () => {
         let location = url.parse(req.url, true);
         let clientId = location.query.token || location.query.user;
         if (!clientId) {
-            client.end(makeEvent({
+            client.send(makeEvent({
                 event: 'loginError',
                 args: 'invalid token or user'
             }))
             client.close(1003, "invalid clientId");
+            return;
         }
         if (server.clients.has(clientId)) {
             client.send(makeEvent({
