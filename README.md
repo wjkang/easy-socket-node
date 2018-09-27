@@ -49,18 +49,149 @@ const easySocket = new EasySocket();
 easySocket
     .connectionUse((context,next)=>{
        console.log("new Connected");
-       next()
+       let location = url.parse(context.req.url, true);
+       let token=location.query.token;
+       if(!token){
+           client.send("invalid token");
+           client.close(1003, "invalid token");
+           return;
+       }
+       context.client.token=token;
+       next();
     })
     .listen(config)
 ```
 
 **context properties**:
 
-| name | description | use |
+| property | description |  |
 | ------ | ------ | ------ |
 | server | instance of EasySocket||
 | client | current connect client ||
-| req | req |req.url|
+| req | req.url ||
+
+## close Middleware
+```js
+const easySocket = new EasySocket();
+easySocket
+    .closeUse((context,next)=>{
+        let server = context.server;
+        let client = context.client;
+        let code = context.code;
+        let reason = context.message;
+        if (code === 1003 && reason === 'invalid token') {
+            console.log("'invalid token' closed")
+        }else{
+            console.log(client.token + " closed");
+        }
+        next();
+    })
+```
+
+**context properties**:
+
+| property | description |  |
+| ------ | ------ | ------ |
+| server | instance of EasySocket||
+| client | current client ||
+| code | close code ||
+| message | close reason ||
+
+## message Middleware
+```js
+const easySocket = new EasySocket();
+easySocket
+    .messageUse((context,next)=>{
+        if (context.req.type === 'event' && context.req.event === 'addRoom') {
+            if (!context.server.roomMap) {
+                context.server.roomMap = new Map();
+            }
+            let roomId = shortid.generate();
+            context.req.args.id = roomId;
+            context.server.roomMap.set(roomId, {
+                id:roomId,
+                name: context.req.args.name,
+                userList: []
+            });
+        }
+        console.log(context.client.token+' send '+context.req);
+        next();
+    })
+```
+receive `{"type":"event","event":"addRoom","args":{"name":"myroom"}}` from browser
+
+then context.req is `{"type":"event","event":"addRoom","args":{"name":"myroom"}}`
+
+**context properties**:
+
+| property | description |  |
+| ------ | ------ | ------ |
+| server | instance of EasySocket||
+| client | current client ||
+| req | receive message from client||
+
+## error Middleware
+```js
+const easySocket = new EasySocket();
+easySocket
+    .errorUse((context,next)=>{
+        console.log(context.error);
+        next();
+    })
+```
+**context properties**:
+
+| property | description |  |
+| ------ | ------ | ------ |
+| server | instance of EasySocket||
+| client | current client ||
+| error | error||
+
+## remoteEmit Middleware
+```js
+const easySocket = new EasySocket();
+easySocket
+    .messageUse((context,next)=>{
+        if (context.req.type === 'event') {
+            context.server.emit(context.req.event, context.req.args);//will call remoteEmit Middleware 
+        }
+        next();
+    })
+    .remoteEmitUse((context,next)=>{
+        let server = context.server;
+        let event = context.event;
+        //broadcast
+        for (let client of server.clients.values()) {
+            client.send({
+                type: 'event',
+                event: event.event,
+                args: event.args
+            });
+        }
+    })
+
+```
+
+receive `{"type":"event","event":"addRoom","args":{"name":"myroom"}}` from browser
+
+then send `{"type":"event","event":"addRoom","args":{"name":"myroom"}}` to all clients
+
+
+**context properties**:
+
+| property | description |  |
+| ------ | ------ | ------ |
+| server | instance of EasySocket||
+| event | event and args ||
+
+
+## example and online demo
+
+[chat example](https://github.com/wjkang/easy-socket-node/tree/master/examples/chat)
+
+[online chat demo](http://jaycewu.coding.me/easy-socket-chat/#/)
+
+
 
 
 
