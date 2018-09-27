@@ -9,7 +9,7 @@
   "scripts": {
     "example": "node examples/server.js",
     "build": "node node_modules/babel-cli/bin/babel.js src --out-dir lib",
-    "prepublish": "node_modules/babel-cli/bin/babel.js src --out-dir lib"
+    "prepublish": "node node_modules/babel-cli/bin/babel.js src --out-dir lib"
   },
   "author": "ruoxie <ruoxieme@gmail.com>",
   "license": "MIT",
