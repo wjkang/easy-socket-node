@@ -6,6 +6,8 @@
 npm install easy-socket-node --save
 ```
 
+**[browser client](https://github.com/wjkang/easy-socket-browser)**
+
 ## Use
 ```js
 import EasySocket from 'easy-socket-node';
