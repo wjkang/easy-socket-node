@@ -184,6 +184,65 @@ then send `{"type":"event","event":"addRoom","args":{"name":"myroom"}}` to all c
 | server | instance of EasySocket||
 | event | event and args ||
 
+## build a route middleware to process message 
+
+messageRouteMiddleware.js
+
+```js
+export default (routes) => {
+    return async (context, next) => {
+        if (context.req.type === 'event') {
+            if (routes[context.req.event]) {
+                await routes[context.req.event](context);
+            } else {
+                context.server.emit(context.req.event, context.req.args);
+            }
+        }
+        next();
+    }
+}
+```
+route.js
+```js
+{
+    addRoom: function (context) {
+        if (!context.server.roomMap) {
+            context.server.roomMap = new Map();
+        }
+        let roomId = shortid.generate();
+        context.req.args.id = roomId;
+        context.server.roomMap.set(roomId, {
+            id: roomId,
+            name: context.req.args.name,
+            userList: []
+        });
+        context.server.emit("addRoom", context.req.args);
+        console.log("addRoom")
+    },
+    enterRoom: function (context) {
+        let room = context.server.roomMap.get(context.req.args.room.id);
+        room.userList.push({ ...context.req.args.user });
+        context.server.emit("enterRoom", context.req.args);
+        console.log("enterRoom")
+    },
+    leaveRoom: function (context) {
+        let room = context.server.roomMap.get(context.req.args.room.id);
+        room.userList.splice(room.userList.findIndex((user) => user.id == context.req.args.user.id), 1);
+        context.server.emit("enterRoom", context.req.args);
+        console.log("enterRoom")
+    }
+}
+```
+app2.js
+```js
+const easySocket = new EasySocket();
+easySocket
+    .messageUse(im.messageRouteMiddleware(imMergeRoutes))
+    .remoteEmitUse(im.remoteEmitMiddleware())
+    .listen(config)
+```
+
+[complete example](https://github.com/wjkang/easy-socket-node/tree/master/examples/chat-routeMiddleware)
 
 ## example and online demo
 
