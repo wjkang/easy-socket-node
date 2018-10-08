@@ -9,7 +9,7 @@
   "scripts": {
     "example": "node examples/server.js",
     "build": "node node_modules/babel-cli/bin/babel.js src --out-dir lib",
-    "prepublish": "node_modules/babel-cli/bin/babel.js src --out-dir lib"
+    "prepublish": "node node_modules/babel-cli/bin/babel.js src --out-dir lib"
   },
   "author": "ruoxie <ruoxieme@gmail.com>",
   "license": "MIT",
@@ -21,6 +21,7 @@
     "babel-core": "^6.26.3",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
-    "shortid": "^2.2.13"
+    "shortid": "^2.2.13",
+    "require-directory": "^2.1.1"
   }
 }
